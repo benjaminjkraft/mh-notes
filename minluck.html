@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="dcterms.date" content="2022-08-07" />
+  <title>Minlucks &amp; floating point errors</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: 1;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <script defer=""
+  src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Minlucks &amp; floating point errors</h1>
+<p class="date">August 7, 2022</p>
+</header>
+<h2 id="background">Background</h2>
+<p>The current accepted <a
+href="https://github.com/tsitu/MH-Tools/blob/master/README.md#-new-formula">catch
+rate formula</a> is as follows:</p>
+<p><span class="math display"> CR = \frac{E * P + 2 *
+\operatorname{floor} (\min(1.4, E) * L)^2}{E * P + M} </span></p>
+<p>where <span class="math inline">P</span> and <span
+class="math inline">L</span> are the setup’s power and luck,
+respectively, <span class="math inline">E</span> is the trap power
+type’s effectiveness against the mouse (often expressed as a
+percentage), <span class="math inline">M</span> is the mouse’s power,
+and <span class="math inline">\operatorname{floor}</span> rounds its
+argument down to the nearest integer. After some algebra results in the
+following formula for the minimum luck needed to guarantee you’ll catch
+a mouse (the “minluck”):</p>
+<p><span class="math display"> ML =
+\operatorname{ceil}\left(\frac{\operatorname{ceil}\left(\sqrt{\frac{M}{2}}\right)}{\min(1.4,
+E)}\right) </span></p>
+<p>For most mice this seems to be correct, but for a few mice there’s
+evidence of misses at the supposed minluck, including a screenshot of a
+miss of Zealous Academic with 85 luck.</p>
+<h2 id="daves-post">Dave’s post</h2>
+<p>On August 5, in response to questions from seli and others, Dave
+posted screenshots from the devs’ internal CRE showing that Zealous
+Academic has a 97% catch rate at 85 luck and 15351 power, and a 100%
+catch rate at 86 luck and the same power. He also confirmed that Zealous
+Academic has a mouse power of 28,000 and a Shadow effectiveness of 600%,
+along with some other comments about how the formula has some quirks due
+to its history. This confirms that our catch rate formula is not quite
+right.</p>
+<h2 id="floating-point-errors">Floating point errors</h2>
+<p>The proposed hypothesis is that the source of the minluck discrepancy
+is <em>floating point errors</em>, which come from the way computers
+typically represent non-integer arithmetic (as “floating point numbers”
+or “floats”). This representation cannot represent most decimal numbers
+exactly, and arithmetic operations on those numbers can cause surprising
+results. <a
+href="https://en.wikipedia.org/wiki/Floating-point_arithmetic#Accuracy_problems">Wikipedia</a>
+describes the problem in much greater detail, but for our purposes all
+we need to know that computers actually represent the number
+<code>1.4</code> as
+<code>1.399999999999999911182158029987476766109466552734375</code>,
+which is an error of about 0.0000000000000063%. (Actually, there are two
+representations, IEEE 754 32- and 64-bit floats, with different
+accuracy; the errors here only come out right if MouseHunt uses 64-bit
+floats so that’s what we’re using.)</p>
+<p>Normally, such errors are tiny, but the floor function used in the
+catch rate formula makes them larger. Specifically, we hit minluck
+if</p>
+<p><span class="math display"> 2 * \operatorname{floor}(\min(1.4, E) *
+L)^2 \geq M </span></p>
+<p>For Zealous Academic (<span class="math inline">E = 6</span> and
+<span class="math inline">M = 28000</span>) at 85 luck, that becomes $ 2
+* (1.4 * 85)^2 $. Now mathematically, <code>1.4 * 85 = 119</code>, so
+the left side is <code>2 * 119² = 28322 ≥ 28000</code>, so we hit
+minluck. But in floating-point land, we actually compute
+<code>1.3999999999999999111... * 85 = 118.99999999999999245...</code>,
+which is again off by some tiny fraction, but it’s less than 119, so the
+floor is 118, not 119. Sadly, <code>2 * 118² = 27848 &lt; 28000</code>,
+so we no longer minluck.</p>
+<h2 id="changed-minlucks">Changed minlucks</h2>
+<p>Only some mice are affected by this change; for example any
+mouse/type with 100% efficacy will be unaffected, since 1 is
+representable exactly as a 64-bit float. Specifically, the following
+mice are currently affected, and under this theory have minluck 1 higher
+than the above formula would indicate:</p>
+<ul>
+<li>Blacksmith, Glass Blower with Physical, Tactical, Law: 85 → 86</li>
+<li>Drudge, RR-8, Summoning Scholar with Forgotten: 45 → 46</li>
+<li>Paladin with Arcane, Draconic, Forgotten, Hydro, Shadow: 45 →
+46</li>
+<li>Treasure Brawler with Forgotten: 85 → 86</li>
+<li>Zealous Academic with Shadow: 85 → 86</li>
+</ul>
+<p>Data from MHCT confirms misses for Blacksmith, Drudge, RR-8,
+Summoning Scholar, and Paladin; Glass Blower, Treasure Brawler, and
+Zealous Academic have too few hunts at the relevant luck to tell (15, 4,
+and 33, respectively; of course Zealous was confirmed by Dave as well as
+several Discord users).</p>
+<h2 id="changed-catch-rates">Changed catch rates</h2>
+<p>When computed with floating-point numbers, the catch rate formula
+above gives a catch rate of 99.88% with the setup Dave posted at 85
+luck; this is obviously both less than 100% and greater than 97%. This
+is consistent with observations in the community that some or all mice
+seem to have a lower-than-expected catch rate when near, but not at,
+minluck. The above theory gives no explanation for this phenomenon, it
+just changes when it would kick in.</p>
+<h2 id="computing-correct-minlucks">Computing correct minlucks</h2>
+<h3 id="using-64-bit-float-arithmetic">Using 64-bit float
+arithmetic</h3>
+<p>For tool authors already using 64-bit float arithmetic (including
+those writing in JavaScript, PHP, Google Apps Script, Python, and most
+other programming languages with a “float64” or “double” type) no
+changes to the above formula are necessary, although authors working
+with trap effectiveness as a percentage must divide it by 100 before
+multiplying by the luck (i.e. <code>min(140, eff) / 100 * luck</code>,
+not <code>min(140, eff) * luck / 100</code>. To compute minlucks, one
+can just use the above formula, then check if
+<code>2 * floor(min(1.4, eff) * candidate_minluck)^2</code> is at least
+the mouse power; if not then increment the minluck by 1.</p>
+<h3 id="using-google-sheets">Using Google Sheets</h3>
+<p>For tool authors using Google Sheets the situation is much more
+complicated. Google Sheets actually also uses 64-bit float arithmetic
+but to avoid exposing such problems to the user it rounds values to 15
+decimal significant figures before any rounding operations as well as
+before displaying to the user. For the catch rate formula, one can
+replace <code>FLOOR(X)</code> with
+<code>IF(X-FLOOR(X) &gt;= 0, FLOOR(X), FLOOR(X)-1)</code>
+(mathematically, the <code>IF</code> always takes the first branch, but
+when Google Sheets’s pre-rounding kicks in, it will take the second
+branch).</p>
+<p>To compute minlucks, Neb has contributed the following formula which
+implements a similar method to the previous subsection, but using the
+floor trick:</p>
+<pre><code>IFERROR(
+    IF(
+        MIN(Eff/100,1.4)*CEILING(CEILING(SQRT(MousePower/2))/MIN(Eff/100,1.4))
+        -FLOOR(MIN(Eff/100,1.4)*CEILING(CEILING(SQRT(MousePower/2))/MIN(Eff/100,1.4)))
+        &gt;=0,
+        CEILING(CEILING(SQRT(MousePower/2))/MIN(Eff/100,1.4)),
+        IF(
+            (MIN(Eff/100,1.4)*CEILING(CEILING(SQRT(MousePower/2))/MIN(Eff/100,1.4))-1)^2*2&gt;MousePower,
+            CEILING(CEILING(SQRT(MousePower/2))/MIN(Eff/100,1.4)),
+            CEILING(CEILING(SQRT(MousePower/2))/MIN(Eff/100,1.4))+1)),
+    &quot;9999&quot;)</code></pre>
+</body>
+</html>
