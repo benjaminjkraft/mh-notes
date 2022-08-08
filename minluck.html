@@ -285,9 +285,10 @@ changes to the above formula are necessary, although authors working
 with trap effectiveness as a percentage must divide it by 100 before
 multiplying by the luck (i.e. <code>min(140, eff) / 100 * luck</code>,
 not <code>min(140, eff) * luck / 100</code>. To compute minlucks, one
-can just use the above formula, then check if
+can just use the old formula, then check if
 <code>2 * floor(min(1.4, eff) * candidate_minluck)^2</code> is at least
-the mouse power; if not then increment the minluck by 1.</p>
+the mouse power; if so the old minluck is correct; if not then increment
+the minluck by 1.</p>
 <h3 id="using-google-sheets">Using Google Sheets</h3>
 <p>For tool authors using Google Sheets the situation is much more
 complicated. Google Sheets actually also uses 64-bit float arithmetic
