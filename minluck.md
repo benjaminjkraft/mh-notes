@@ -49,7 +49,7 @@ When computed with floating-point numbers, the catch rate formula above gives a 
 
 ### Using 64-bit float arithmetic
 
-For tool authors already using 64-bit float arithmetic (including those writing in JavaScript, PHP, Google Apps Script, Python, and most other programming languages with a "float64" or "double" type) no changes to the above formula are necessary, although authors working with trap effectiveness as a percentage must divide it by 100 before multiplying by the luck (i.e. `min(140, eff) / 100 * luck`, not `min(140, eff) * luck / 100`. To compute minlucks, one can just use the above formula, then check if `2 * floor(min(1.4, eff) * candidate_minluck)^2` is at least the mouse power; if not then increment the minluck by 1.
+For tool authors already using 64-bit float arithmetic (including those writing in JavaScript, PHP, Google Apps Script, Python, and most other programming languages with a "float64" or "double" type) no changes to the above formula are necessary, although authors working with trap effectiveness as a percentage must divide it by 100 before multiplying by the luck (i.e. `min(140, eff) / 100 * luck`, not `min(140, eff) * luck / 100`. To compute minlucks, one can just use the old formula, then check if `2 * floor(min(1.4, eff) * candidate_minluck)^2` is at least the mouse power; if so the old minluck is correct; if not then increment the minluck by 1.
 
 ### Using Google Sheets
 
