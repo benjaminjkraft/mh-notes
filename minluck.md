@@ -17,7 +17,7 @@ For most mice this seems to be correct, but for a few mice there's evidence of m
 
 ## Dave's post
 
-On August 5, in response to questions from seli and others, Dave posted screenshots from the devs' internal CRE showing that Zealous Academic has a 97% catch rate at 85 luck and 15351 power, and a 100% catch rate at 86 luck and the same power. He also confirmed that Zealous Academic has a mouse power of 28,000 and a Shadow effectiveness of 600%, along with some other comments about how the formula has some quirks due to its history. This confirms that our catch rate formula is not quite right.
+On August 5, in response to questions from seli and others, [Dave posted screenshots](https://discord.com/channels/275500976662773761/355474934601875457/1005190015376183296) from the devs' internal CRE showing that Zealous Academic has a 97% catch rate at 85 luck and 15351 power, and a 100% catch rate at 86 luck and the same power. He also [confirmed](https://discord.com/channels/275500976662773761/355474934601875457/1005184813151559822) that Zealous Academic has a mouse power of 28,000 and a Shadow effectiveness of 600%, along with some other comments about how the formula has some quirks due to its history. This confirms that our catch rate formula is not quite right.
 
 ## Floating point errors
 
@@ -70,3 +70,4 @@ IFERROR(
     "9999")
 ```
 
+Neb's spreadsheet of the new and old minlucks using the above formula is [here](https://docs.google.com/spreadsheets/d/1UHBRqR9oHNTP2aEQJEw1oUcvyIvYIxiRa9-NotuiSDI/edit#gid=759842139).
